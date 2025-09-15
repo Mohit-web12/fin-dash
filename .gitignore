@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+env/
+venv/
+.DS_Store
+.vscode/
+.idea/
+backend/finance.db
