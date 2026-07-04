@@ -7,6 +7,7 @@ class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
 
 class Account(Base):
     __tablename__ = "accounts"
@@ -31,3 +32,12 @@ class Transaction(Base):
     subcategory = Column(String, index=True)
     is_recurring = Column(Boolean, default=False)
     notes = Column(String, nullable=True)
+    dedupe_key = Column(String, index=True, nullable=True)  # hash of date+amount+merchant, for CSV re-ingest dedup
+
+
+class Budget(Base):
+    __tablename__ = "budgets"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True)
+    category = Column(String, index=True)
+    monthly_limit = Column(Float)
