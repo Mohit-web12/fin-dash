@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: fin-dash-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE_MINUTES
+        value: "1440"
+      # Update this to the frontend's actual onrender.com URL after first deploy.
+      - key: CORS_ORIGINS
+        value: https://fin-dash-web.onrender.com
+      - key: SEED_USER_EMAIL
+        sync: false
+      - key: SEED_USER_PASSWORD
+        sync: false
+    # Render's free plan has an ephemeral filesystem: the SQLite file at
+    # /app/data/finance.db is wiped on every deploy and on periodic restarts.
+    # Fine for a demo; uncomment this (and upgrade off the free plan) for
+    # data that needs to survive:
+    # disk:
+    #   name: fin-dash-data
+    #   mountPath: /app/data
+    #   sizeGB: 1
+
+  - type: web
+    name: fin-dash-web
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # Update this to the backend's actual onrender.com URL after first deploy,
+      # then trigger a manual redeploy so the build picks it up (Vite bakes
+      # this in at build time, not read at runtime).
+      - key: VITE_API_BASE_URL
+        value: https://fin-dash-api.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
