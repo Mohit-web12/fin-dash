@@ -11,3 +11,16 @@ venv/
 .vscode/
 .idea/
 backend/finance.db
+*.db
+
+# Secrets / env
+.env
+.env.*
+!.env.example
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+npm-debug.log*
