@@ -1,15 +1,62 @@
 :root {
+  /* Color — neutral ramp */
   --bg: #f6f7fb;
   --surface: #ffffff;
   --border: #e3e5ea;
   --text: #1f2430;
   --text-muted: #6b7280;
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
-  --danger: #dc2626;
+
+  /* Color — accent (blue: fintech-trust convention, kept clear of the
+     green/red semantic colors below so "primary action" never gets
+     confused with "income/expense") */
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+
+  /* Color — semantic (finance data needs income vs. expense at a glance;
+     "danger" actions reuse --negative rather than getting their own hue) */
   --positive: #16a34a;
   --negative: #dc2626;
-  --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+
+  /* Type scale — 12/14/16/20/24/32/48 */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 3rem;
+
+  --weight-normal: 400;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --leading-tight: 1.2;   /* headings */
+  --leading-normal: 1.55; /* body */
+
+  /* Spacing — 4px base */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+
+  /* Radius — controls vs. containers */
+  --radius-sm: 6px;
+  --radius-lg: 12px;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 4px 12px rgba(16, 24, 40, 0.10), 0 12px 32px rgba(16, 24, 40, 0.12);
+
+  /* Motion */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
   color-scheme: light dark;
 }
 
@@ -20,12 +67,12 @@
     --border: #2c3040;
     --text: #e5e7eb;
     --text-muted: #9ca3af;
-    --accent: #818cf8;
-    --accent-hover: #a5b4fc;
-    --danger: #f87171;
+    --accent: #60a5fa;
+    --accent-hover: #93c5fd;
     --positive: #4ade80;
     --negative: #f87171;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.45);
   }
 }
 
@@ -36,6 +83,9 @@
 body {
   margin: 0;
   font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-size: var(--text-base);
+  font-weight: var(--weight-normal);
+  line-height: var(--leading-normal);
   background: var(--bg);
   color: var(--text);
 }
@@ -47,29 +97,53 @@ body {
 h1,
 h2,
 h3 {
-  margin: 0 0 0.5em;
+  margin: 0 0 var(--space-2);
   color: var(--text);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+}
+
+h1 {
+  font-size: var(--text-2xl);
+}
+h2 {
+  font-size: var(--text-xl);
+}
+h3 {
+  font-size: var(--text-lg);
 }
 
 .muted {
   color: var(--text-muted);
-  font-size: 0.9em;
+  font-size: var(--text-sm);
+}
+
+a {
+  color: var(--accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 .btn {
   font: inherit;
-  padding: 8px 14px;
-  border-radius: 8px;
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: opacity 0.15s, background 0.15s;
+  transition: background var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
 }
 
 .btn-primary {
   background: var(--accent);
   color: white;
 }
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: var(--accent-hover);
 }
 .btn-primary:disabled {
@@ -87,10 +161,14 @@ h3 {
   background: transparent;
   border-color: var(--border);
   color: var(--text);
-  padding: 6px 10px;
+  padding: var(--space-2) var(--space-3);
+}
+.btn-ghost:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .btn-ghost.danger {
-  color: var(--danger);
+  color: var(--negative);
 }
 
 .file-btn {
@@ -99,43 +177,49 @@ h3 {
   cursor: pointer;
 }
 
+/* ----- form controls (shared by auth card, modal, filter bar, budget row) ----- */
+input {
+  font: inherit;
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+input:hover {
+  border-color: var(--text-muted);
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
 /* ----- auth ----- */
 .auth-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: var(--space-5);
 }
 
 .auth-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  padding: 32px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-7);
   width: 100%;
   max-width: 360px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-}
-
-.auth-card label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.9em;
-  color: var(--text-muted);
-}
-
-.auth-card input {
-  font: inherit;
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
+  gap: var(--space-4);
 }
 
 /* ----- app shell ----- */
@@ -148,28 +232,33 @@ h3 {
 .app-header {
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 12px 24px;
+  gap: var(--space-6);
+  padding: var(--space-3) var(--space-6);
   border-bottom: 1px solid var(--border);
   background: var(--surface);
 }
 
 .brand {
-  font-weight: 700;
-  font-size: 1.1em;
+  font-weight: var(--weight-bold);
+  font-size: var(--text-lg);
 }
 
 .app-nav {
   display: flex;
-  gap: 16px;
+  gap: var(--space-4);
   flex: 1;
 }
 
 .app-nav a {
   color: var(--text-muted);
   text-decoration: none;
-  padding: 6px 4px;
+  padding: var(--space-2) var(--space-1);
   border-bottom: 2px solid transparent;
+  transition: color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+.app-nav a:hover {
+  color: var(--text);
 }
 
 .app-nav a.active {
@@ -180,9 +269,9 @@ h3 {
 .app-user {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   color: var(--text-muted);
-  font-size: 0.9em;
+  font-size: var(--text-sm);
 }
 
 .app-main {
@@ -190,11 +279,11 @@ h3 {
   width: 100%;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 24px;
+  padding: var(--space-6);
 }
 
 .page-loading {
-  padding: 40px;
+  padding: var(--space-8);
   text-align: center;
   color: var(--text-muted);
 }
@@ -203,90 +292,78 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
   flex-wrap: wrap;
 }
 
 .header-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 /* ----- banners ----- */
-.error-banner {
-  background: color-mix(in srgb, var(--danger) 15%, transparent);
-  color: var(--danger);
-  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
-  border-radius: 8px;
-  padding: 10px 14px;
-  margin-bottom: 12px;
-  font-size: 0.9em;
-}
-
+.error-banner,
 .banner {
-  border-radius: 8px;
-  padding: 10px 14px;
-  margin-bottom: 12px;
-  font-size: 0.9em;
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+}
+.error-banner {
+  background: color-mix(in srgb, var(--negative) 15%, transparent);
+  color: var(--negative);
+  border: 1px solid color-mix(in srgb, var(--negative) 40%, transparent);
 }
 .banner-info {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
 }
 .banner-error {
-  background: color-mix(in srgb, var(--danger) 15%, transparent);
-  color: var(--danger);
-  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  background: color-mix(in srgb, var(--negative) 15%, transparent);
+  color: var(--negative);
+  border: 1px solid color-mix(in srgb, var(--negative) 40%, transparent);
 }
 
 /* ----- filters ----- */
 .filter-bar {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   flex-wrap: wrap;
-  margin-bottom: 16px;
-}
-
-.filter-bar input,
-input[type="month"],
-input[type="date"] {
-  font: inherit;
-  padding: 7px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
+  margin-bottom: var(--space-4);
 }
 
 /* ----- table ----- */
 .table-wrap {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4);
   overflow-x: auto;
-  margin-bottom: 24px;
+  margin-bottom: var(--space-6);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.92em;
+  font-size: var(--text-sm);
 }
 
 th,
 td {
   text-align: left;
-  padding: 10px 8px;
+  padding: var(--space-3) var(--space-2);
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
 
 th {
   color: var(--text-muted);
-  font-weight: 600;
-  font-size: 0.85em;
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .num {
@@ -303,18 +380,12 @@ th {
 
 .row-actions {
   display: flex;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .budget-input {
   width: 90px;
-  margin-right: 6px;
-  font: inherit;
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
+  margin-right: var(--space-2);
 }
 
 /* ----- modal ----- */
@@ -326,50 +397,72 @@ th {
   align-items: center;
   justify-content: center;
   z-index: 10;
-  padding: 20px;
+  padding: var(--space-5);
+  animation: fade-in var(--duration-base) var(--ease-out);
 }
 
 .modal-card {
   background: var(--surface);
-  border-radius: 12px;
-  padding: 24px;
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
   width: 100%;
   max-width: 420px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  box-shadow: var(--shadow);
-}
-
-.modal-card label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.9em;
-  color: var(--text-muted);
-}
-
-.modal-card input {
-  font: inherit;
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
+  gap: var(--space-3);
+  box-shadow: var(--shadow-lg);
+  animation: modal-in var(--duration-base) var(--ease-out);
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 8px;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ----- skeleton loading ----- */
+.skeleton {
+  background: var(--border);
+  border-radius: var(--radius-sm);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* ----- dashboard ----- */
 .stat-row {
   display: flex;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
   flex-wrap: wrap;
 }
 
@@ -377,25 +470,27 @@ th {
   flex: 1 1 160px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px 20px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4) var(--space-5);
 }
 
 .stat-label {
   color: var(--text-muted);
-  font-size: 0.85em;
-  margin-bottom: 4px;
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-1);
 }
 
 .stat-value {
-  font-size: 1.6em;
-  font-weight: 700;
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
 }
 
 .chart-row {
   display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
   flex-wrap: wrap;
 }
 
@@ -403,6 +498,19 @@ th {
   flex: 1 1 380px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4);
+}
+
+/* ----- reduced motion ----- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -16,12 +16,42 @@ import { api } from "../api/client";
 
 const COLORS = ["#6366f1", "#22c55e", "#f97316", "#ec4899", "#06b6d4", "#eab308", "#8b5cf6", "#ef4444"];
 
+function DashboardSkeleton() {
+  return (
+    <div>
+      <div className="page-header">
+        <h1>Dashboard</h1>
+        <div className="skeleton" style={{ width: "140px", height: "36px" }} />
+      </div>
+
+      <div className="stat-row">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div className="stat-card" key={i}>
+            <div className="skeleton" style={{ width: "56px", height: "12px", marginBottom: "8px" }} />
+            <div className="skeleton" style={{ width: "96px", height: "28px" }} />
+          </div>
+        ))}
+      </div>
+
+      <div className="chart-row">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div className="chart-card" key={i}>
+            <div className="skeleton" style={{ width: "180px", height: "16px", marginBottom: "16px" }} />
+            <div className="skeleton" style={{ width: "100%", height: "280px" }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [month, setMonth] = useState("");
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [budgetDraft, setBudgetDraft] = useState({});
+  const [savingCategory, setSavingCategory] = useState(null);
 
   async function load(m) {
     setLoading(true);
@@ -45,11 +75,16 @@ export default function Dashboard() {
   async function handleBudgetSave(category) {
     const value = parseFloat(budgetDraft[category]);
     if (Number.isNaN(value)) return;
-    await api.upsertBudget(category, value);
-    await load(month);
+    setSavingCategory(category);
+    try {
+      await api.upsertBudget(category, value);
+      await load(month);
+    } finally {
+      setSavingCategory(null);
+    }
   }
 
-  if (loading) return <div className="page-loading">Loading…</div>;
+  if (loading) return <DashboardSkeleton />;
   if (error) return <div className="error-banner">{error}</div>;
   if (!data) return null;
 
@@ -123,8 +158,8 @@ export default function Dashboard() {
               <YAxis />
               <Tooltip formatter={(v) => `$${Number(v).toFixed(2)}`} />
               <Legend />
-              <Bar dataKey="spend" fill="#ef4444" name="Spend" />
-              <Bar dataKey="income" fill="#22c55e" name="Income" />
+              <Bar dataKey="spend" fill="var(--negative)" name="Spend" />
+              <Bar dataKey="income" fill="var(--positive)" name="Income" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -162,8 +197,12 @@ export default function Dashboard() {
                       setBudgetDraft((d) => ({ ...d, [c.category]: e.target.value }))
                     }
                   />
-                  <button className="btn btn-ghost" onClick={() => handleBudgetSave(c.category)}>
-                    Save
+                  <button
+                    className="btn btn-ghost"
+                    disabled={savingCategory === c.category}
+                    onClick={() => handleBudgetSave(c.category)}
+                  >
+                    {savingCategory === c.category ? "Saving…" : "Save"}
                   </button>
                 </td>
               </tr>

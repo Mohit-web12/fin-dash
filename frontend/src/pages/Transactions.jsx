@@ -76,6 +76,23 @@ function TransactionForm({ initial, onCancel, onSave }) {
   );
 }
 
+function SkeletonRows() {
+  const widths = ["70px", "130px", "110px", "60px", "90px"];
+  return Array.from({ length: 5 }).map((_, i) => (
+    <tr key={i}>
+      {widths.map((w, j) => (
+        <td key={j} className={j === 3 ? "num" : undefined}>
+          <div
+            className="skeleton"
+            style={{ width: w, height: "0.85em", marginLeft: j === 3 ? "auto" : 0 }}
+          />
+        </td>
+      ))}
+      <td></td>
+    </tr>
+  ));
+}
+
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -85,6 +102,7 @@ export default function Transactions() {
   const [editing, setEditing] = useState(null); // null | {} (new) | transaction (edit)
   const [uploadSummary, setUploadSummary] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const fileInputRef = useRef(null);
 
   const load = useCallback(async () => {
@@ -116,8 +134,13 @@ export default function Transactions() {
 
   async function handleDelete(tx) {
     if (!confirm(`Delete transaction "${tx.merchant}" for ${tx.amount}?`)) return;
-    await api.deleteTransaction(tx.id);
-    await load();
+    setDeletingId(tx.id);
+    try {
+      await api.deleteTransaction(tx.id);
+      await load();
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   async function handleFileChange(e) {
@@ -227,9 +250,7 @@ export default function Transactions() {
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={6}>Loading…</td>
-              </tr>
+              <SkeletonRows />
             ) : transactions.length === 0 ? (
               <tr>
                 <td colSpan={6}>No transactions found.</td>
@@ -248,11 +269,19 @@ export default function Transactions() {
                   </td>
                   <td>{t.notes}</td>
                   <td className="row-actions">
-                    <button className="btn btn-ghost" onClick={() => setEditing(t)}>
+                    <button
+                      className="btn btn-ghost"
+                      onClick={() => setEditing(t)}
+                      disabled={deletingId === t.id}
+                    >
                       Edit
                     </button>
-                    <button className="btn btn-ghost danger" onClick={() => handleDelete(t)}>
-                      Delete
+                    <button
+                      className="btn btn-ghost danger"
+                      onClick={() => handleDelete(t)}
+                      disabled={deletingId === t.id}
+                    >
+                      {deletingId === t.id ? "Deleting…" : "Delete"}
                     </button>
                   </td>
                 </tr>
