@@ -1,20 +1,18 @@
 import { useEffect, useState } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import Gauge from "../components/Gauge";
 import { api } from "../api/client";
 
-const COLORS = ["#6366f1", "#22c55e", "#f97316", "#ec4899", "#06b6d4", "#eab308", "#8b5cf6", "#ef4444"];
+const money = (n) => `${n < 0 ? "-" : ""}$${Math.abs(n).toFixed(2)}`;
+
+const tickStyle = { fill: "var(--text-muted)", fontSize: 12, fontFamily: "var(--font-body)" };
+const tooltipContentStyle = {
+  background: "var(--surface-2)",
+  border: "1px solid var(--border)",
+  borderRadius: "var(--radius-sm)",
+  fontFamily: "var(--font-body)",
+  fontSize: "var(--text-sm)",
+};
 
 function DashboardSkeleton() {
   return (
@@ -24,11 +22,11 @@ function DashboardSkeleton() {
         <div className="skeleton" style={{ width: "140px", height: "36px" }} />
       </div>
 
-      <div className="stat-row">
+      <div className="gauge-row">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div className="stat-card" key={i}>
-            <div className="skeleton" style={{ width: "56px", height: "12px", marginBottom: "8px" }} />
-            <div className="skeleton" style={{ width: "96px", height: "28px" }} />
+          <div className="gauge-card" key={i}>
+            <div className="skeleton" style={{ width: "150px", height: "150px", borderRadius: "50%", margin: "0 auto" }} />
+            <div className="skeleton" style={{ width: "80px", height: "22px", margin: "12px auto 0" }} />
           </div>
         ))}
       </div>
@@ -37,10 +35,42 @@ function DashboardSkeleton() {
         {Array.from({ length: 2 }).map((_, i) => (
           <div className="chart-card" key={i}>
             <div className="skeleton" style={{ width: "180px", height: "16px", marginBottom: "16px" }} />
-            <div className="skeleton" style={{ width: "100%", height: "280px" }} />
+            <div className="skeleton" style={{ width: "100%", height: "220px" }} />
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// Bars ranked by length in one accent color, not a multi-hue pie — the
+// vintage palette only has three real colors and a 7-category pie would
+// need seven, so rank-by-length reads better than inventing more hues.
+function CategoryBreakdown({ categories }) {
+  const [revealed, setRevealed] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setRevealed(true), 100);
+    return () => clearTimeout(t);
+  }, []);
+
+  const withSpend = categories.filter((c) => c.spend > 0);
+  if (withSpend.length === 0) {
+    return <p className="muted">No spending recorded for this month.</p>;
+  }
+  const max = Math.max(...withSpend.map((c) => c.spend));
+
+  return (
+    <div>
+      {withSpend.map((c) => (
+        <div className="cat-row" key={c.category}>
+          <div className="cat-name">{c.category}</div>
+          <div className="cat-track">
+            <div className="cat-fill" style={{ width: revealed ? `${(c.spend / max) * 100}%` : "0%" }} />
+          </div>
+          <div className="cat-value">{money(c.spend)}</div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -88,7 +118,11 @@ export default function Dashboard() {
   if (error) return <div className="error-banner">{error}</div>;
   if (!data) return null;
 
-  const pieData = data.by_category.filter((c) => c.spend > 0);
+  const totalBudget = data.by_category.reduce((sum, c) => sum + (c.budget || 0), 0);
+  const gaugeMax = Math.max(totalBudget, data.total_spend, data.total_income, 1);
+  const spendSub = totalBudget > 0 ? `of ${money(totalBudget)} budget` : "no budget set";
+  const savingsRate = data.total_income > 0 ? Math.round((data.net / data.total_income) * 100) : null;
+  const netSub = savingsRate != null ? `${savingsRate}% of income saved` : "this month";
 
   return (
     <div>
@@ -104,69 +138,51 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="stat-row">
-        <div className="stat-card">
-          <div className="stat-label">Spend</div>
-          <div className="stat-value negative">${data.total_spend.toFixed(2)}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Income</div>
-          <div className="stat-value positive">${data.total_income.toFixed(2)}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Net</div>
-          <div className={`stat-value ${data.net < 0 ? "negative" : "positive"}`}>
-            ${data.net.toFixed(2)}
-          </div>
-        </div>
+      <div className="gauge-row">
+        <Gauge label="Spend" value={data.total_spend} max={gaugeMax} sub={spendSub} accent="var(--accent)" />
+        <Gauge label="Income" value={data.total_income} max={gaugeMax} sub="this month" accent="var(--positive)" />
+        <Gauge label="Net" value={data.net} max={gaugeMax} sub={netSub} accent="var(--brass)" />
       </div>
 
       <div className="chart-row">
         <div className="chart-card">
-          <h3>Spending by category — {data.month}</h3>
-          {pieData.length === 0 ? (
-            <p className="muted">No spending recorded for this month.</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  dataKey="spend"
-                  nameKey="category"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  label={(entry) => entry.category}
-                >
-                  {pieData.map((entry, i) => (
-                    <Cell key={entry.category} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(v) => `$${v.toFixed(2)}`} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
+          <div className="panel-head">
+            <h3>Spending by category</h3>
+            <span className="suffix">{data.month}</span>
+          </div>
+          <div className="rule" />
+          <CategoryBreakdown categories={data.by_category} />
         </div>
 
         <div className="chart-card">
           <h3>Monthly trend</h3>
-          <ResponsiveContainer width="100%" height={280}>
+          <div className="rule" />
+          <ResponsiveContainer width="100%" height={240}>
             <BarChart data={data.monthly_totals}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip formatter={(v) => `$${Number(v).toFixed(2)}`} />
-              <Legend />
-              <Bar dataKey="spend" fill="var(--negative)" name="Spend" />
-              <Bar dataKey="income" fill="var(--positive)" name="Income" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="month" tick={tickStyle} axisLine={{ stroke: "var(--border)" }} tickLine={false} />
+              <YAxis tick={tickStyle} axisLine={false} tickLine={false} width={40} />
+              <Tooltip
+                formatter={(v) => `$${Number(v).toFixed(2)}`}
+                contentStyle={tooltipContentStyle}
+                labelStyle={{ color: "var(--text-muted)" }}
+                itemStyle={{ color: "var(--text)" }}
+                cursor={{ fill: "var(--surface-2)" }}
+              />
+              <Legend wrapperStyle={{ color: "var(--text-muted)", fontSize: "var(--text-sm)", fontFamily: "var(--font-body)" }} />
+              <Bar dataKey="spend" fill="var(--negative)" name="Spend" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="income" fill="var(--positive)" name="Income" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       <div className="table-wrap">
-        <h3>Budgets — actual vs. limit</h3>
+        <div className="panel-head">
+          <h3>Budgets — actual vs. limit</h3>
+          <span className="suffix">{data.month}</span>
+        </div>
+        <div className="rule" />
         <table>
           <thead>
             <tr>

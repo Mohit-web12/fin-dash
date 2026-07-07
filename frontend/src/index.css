@@ -1,23 +1,40 @@
 :root {
-  /* Color — neutral ramp */
-  --bg: #f6f7fb;
-  --surface: #ffffff;
-  --border: #e3e5ea;
-  --text: #1f2430;
-  --text-muted: #6b7280;
+  /* Color — wood base (deep espresso, not slate) */
+  --bg: #17100b;
+  --surface: #241812; /* cards, panels, table, modal */
+  --surface-2: #30211a; /* nav bar, gauge dial ring — one step up */
+  --border: rgba(198, 164, 92, 0.22); /* brass hairline: the one border treatment, everywhere */
 
-  /* Color — accent (blue: fintech-trust convention, kept clear of the
-     green/red semantic colors below so "primary action" never gets
-     confused with "income/expense") */
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
+  /* Color — text on dark */
+  --text: #ece1c9; /* cream */
+  --text-muted: #a3906f;
 
-  /* Color — semantic (finance data needs income vs. expense at a glance;
-     "danger" actions reuse --negative rather than getting their own hue) */
-  --positive: #16a34a;
-  --negative: #dc2626;
+  /* Color — accent (oxblood; also the expense/negative FILL color) */
+  --accent: #8a3330;
+  --accent-hover: #a03d39;
 
-  /* Type scale — 12/14/16/20/24/32/48 */
+  /* Color — brass: metal accents, hairlines, dividers, dial bezel */
+  --brass: #c6a45c;
+
+  /* Color — semantic FILLS (chart bars, gauge arcs, category bars) */
+  --positive: #3e6957; /* British racing green */
+  --negative: var(--accent);
+
+  /* Color — semantic TEXT. The fills above are too dark to pass contrast
+     as small text on a dark background (checked: ~2.2-3:1); these are
+     brighter derivatives used only for inline amounts/labels. */
+  --positive-text: #6ba892;
+  --negative-text: #cf6f68;
+
+  /* Color — gauge dial face (cream), needle/pivot ink (matches --surface) */
+  --dial-face: #ece1c9;
+  --dial-ink: #241812;
+
+  /* Type — Fraunces for display/headings, Instrument Sans for UI/data */
+  --font-heading: "Fraunces Variable", ui-serif, serif;
+  --font-body: "Instrument Sans", system-ui, sans-serif;
+
+  /* Type scale — 12/14/16/20/24/32/48 (unchanged from the base system) */
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
@@ -30,10 +47,12 @@
   --weight-semibold: 600;
   --weight-bold: 700;
 
-  --leading-tight: 1.2;   /* headings */
+  --leading-tight: 1.2; /* headings */
   --leading-normal: 1.55; /* body */
 
-  /* Spacing — 4px base */
+  --tracking-label: 0.12em; /* the engraved-dial micro-label treatment */
+
+  /* Spacing — 4px base (unchanged) */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -44,36 +63,21 @@
   --space-8: 40px;
   --space-9: 48px;
 
-  /* Radius — controls vs. containers */
-  --radius-sm: 6px;
-  --radius-lg: 12px;
+  /* Radius — controls vs. containers (bumped for the rounder instrument-panel look) */
+  --radius-sm: 7px;
+  --radius-lg: 16px;
 
-  /* Elevation */
-  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
-  --shadow-lg: 0 4px 12px rgba(16, 24, 40, 0.10), 0 12px 32px rgba(16, 24, 40, 0.12);
+  /* Elevation — subtle; surfaces stay nearly flat, not deeply skeuomorphic */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.3);
 
   /* Motion */
   --duration-fast: 150ms;
   --duration-base: 200ms;
+  --duration-slow: 900ms; /* gauge needle sweep — a physical motion, not a UI micro-transition */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
-  color-scheme: light dark;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #14161f;
-    --surface: #1c1f2b;
-    --border: #2c3040;
-    --text: #e5e7eb;
-    --text-muted: #9ca3af;
-    --accent: #60a5fa;
-    --accent-hover: #93c5fd;
-    --positive: #4ade80;
-    --negative: #f87171;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.35), 0 12px 32px rgba(0, 0, 0, 0.45);
-  }
+  color-scheme: dark;
 }
 
 * {
@@ -82,12 +86,34 @@
 
 body {
   margin: 0;
-  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-body);
   font-size: var(--text-base);
   font-weight: var(--weight-normal);
   line-height: var(--leading-normal);
   background: var(--bg);
   color: var(--text);
+  position: relative;
+}
+
+/* the brass hairline that runs across the very top of every screen */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--brass) 55%, transparent) 12%,
+    var(--brass) 50%,
+    color-mix(in srgb, var(--brass) 55%, transparent) 88%,
+    transparent
+  );
+  opacity: 0.7;
+  z-index: 50;
+  pointer-events: none;
 }
 
 #root {
@@ -99,7 +125,8 @@ h2,
 h3 {
   margin: 0 0 var(--space-2);
   color: var(--text);
-  font-weight: var(--weight-bold);
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
   line-height: var(--leading-tight);
 }
 
@@ -119,11 +146,11 @@ h3 {
 }
 
 a {
-  color: var(--accent);
+  color: var(--brass);
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--brass);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
@@ -141,7 +168,7 @@ a {
 
 .btn-primary {
   background: var(--accent);
-  color: white;
+  color: var(--text);
 }
 .btn-primary:hover:not(:disabled) {
   background: var(--accent-hover);
@@ -152,7 +179,7 @@ a {
 }
 
 .btn-secondary {
-  background: var(--surface);
+  background: var(--surface-2);
   border-color: var(--border);
   color: var(--text);
 }
@@ -168,7 +195,7 @@ a {
   cursor: not-allowed;
 }
 .btn-ghost.danger {
-  color: var(--negative);
+  color: var(--negative-text);
 }
 
 .file-btn {
@@ -184,12 +211,13 @@ input {
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--surface-2);
   color: var(--text);
   transition: border-color var(--duration-fast) var(--ease-out);
+  color-scheme: dark;
 }
 input:hover {
-  border-color: var(--text-muted);
+  border-color: var(--brass);
 }
 
 label {
@@ -207,6 +235,7 @@ label {
   align-items: center;
   justify-content: center;
   padding: var(--space-5);
+  background: radial-gradient(120% 90% at 50% -10%, var(--surface-2) 0%, var(--bg) 60%);
 }
 
 .auth-card {
@@ -235,12 +264,27 @@ label {
   gap: var(--space-6);
   padding: var(--space-3) var(--space-6);
   border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--surface-2);
 }
 
 .brand {
-  font-weight: var(--weight-bold);
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
   font-size: var(--text-lg);
+  color: var(--text);
+}
+.brand-dot {
+  color: var(--accent);
+}
+.brand-sub {
+  display: block;
+  font-family: var(--font-body);
+  font-weight: var(--weight-semibold);
+  font-size: 10px;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: var(--space-1);
 }
 
 .app-nav {
@@ -263,7 +307,7 @@ label {
 
 .app-nav a.active {
   color: var(--text);
-  border-bottom-color: var(--accent);
+  border-bottom-color: var(--brass);
 }
 
 .app-user {
@@ -302,6 +346,31 @@ label {
   gap: var(--space-2);
 }
 
+/* ----- panel heading pattern: title + small-caps date/context suffix ----- */
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: 0;
+}
+
+.panel-head .suffix {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.rule {
+  height: 1px;
+  background: linear-gradient(90deg, var(--brass), transparent);
+  opacity: 0.35;
+  margin: var(--space-3) 0 var(--space-4);
+}
+
 /* ----- banners ----- */
 .error-banner,
 .banner {
@@ -311,18 +380,18 @@ label {
   font-size: var(--text-sm);
 }
 .error-banner {
-  background: color-mix(in srgb, var(--negative) 15%, transparent);
-  color: var(--negative);
-  border: 1px solid color-mix(in srgb, var(--negative) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--negative-text);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
 }
 .banner-info {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--brass) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--brass) 40%, transparent);
 }
 .banner-error {
-  background: color-mix(in srgb, var(--negative) 15%, transparent);
-  color: var(--negative);
-  border: 1px solid color-mix(in srgb, var(--negative) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--negative-text);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 /* ----- filters ----- */
@@ -363,19 +432,24 @@ th {
   font-weight: var(--weight-semibold);
   font-size: var(--text-xs);
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--tracking-label);
+}
+
+td {
+  font-variant-numeric: tabular-nums;
 }
 
 .num {
   text-align: right;
   font-variant-numeric: tabular-nums;
+  font-family: var(--font-heading);
 }
 
 .positive {
-  color: var(--positive);
+  color: var(--positive-text);
 }
 .negative {
-  color: var(--negative);
+  color: var(--negative-text);
 }
 
 .row-actions {
@@ -392,7 +466,7 @@ th {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -403,6 +477,7 @@ th {
 
 .modal-card {
   background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
   width: 100%;
@@ -443,7 +518,7 @@ th {
 
 /* ----- skeleton loading ----- */
 .skeleton {
-  background: var(--border);
+  background: var(--surface-2);
   border-radius: var(--radius-sm);
   animation: skeleton-pulse 1.4s ease-in-out infinite;
 }
@@ -458,33 +533,103 @@ th {
   }
 }
 
-/* ----- dashboard ----- */
-.stat-row {
+/* ----- dashboard: gauge cluster ----- */
+.gauge-row {
   display: flex;
   gap: var(--space-4);
   margin-bottom: var(--space-5);
   flex-wrap: wrap;
 }
 
-.stat-card {
-  flex: 1 1 160px;
+.gauge-card {
+  flex: 1 1 190px;
+  max-width: 240px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-5) var(--space-4) var(--space-6);
+  text-align: center;
 }
 
-.stat-label {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  margin-bottom: var(--space-1);
+.gauge-dial {
+  width: 150px;
+  height: 150px;
+  margin: 0 auto;
+  display: block;
 }
 
-.stat-value {
+.gauge-value {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-semibold);
   font-size: var(--text-2xl);
-  font-weight: var(--weight-bold);
+  color: var(--text);
   line-height: var(--leading-tight);
+  margin-top: var(--space-2);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.gauge-label {
+  font-family: var(--font-body);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: var(--space-2);
+}
+
+.gauge-sub {
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-top: var(--space-1);
+}
+
+/* ----- dashboard: category breakdown (ranked bars, not a multi-hue pie —
+   a palette this restrained can't support 7+ distinct category colors,
+   so rank-by-length in one accent color instead) ----- */
+.cat-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 140px) 1fr 84px;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.cat-row:last-child {
+  margin-bottom: 0;
+}
+
+.cat-name {
+  font-size: var(--text-sm);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cat-track {
+  height: 9px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.cat-fill {
+  height: 100%;
+  border-radius: 5px;
+  background: var(--accent);
+  width: 0;
+  transition: width var(--duration-slow) var(--ease-out);
+}
+
+.cat-value {
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  text-align: right;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
 .chart-row {
@@ -500,7 +645,7 @@ th {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  padding: var(--space-4);
+  padding: var(--space-4) var(--space-5);
 }
 
 /* ----- reduced motion ----- */

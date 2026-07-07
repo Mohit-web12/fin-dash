@@ -7,7 +7,9 @@ export default function Layout() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div className="brand">Fin Dash</div>
+        <div className="brand">
+          Fin Dash<span className="brand-dot">.</span>
+        </div>
         <nav className="app-nav">
           <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
             Dashboard
