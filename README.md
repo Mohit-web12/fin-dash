@@ -88,7 +88,7 @@ Render was chosen over Fly.io/Railway because it deploys both a Docker web servi
 
 ### Deploy steps
 
-1. Push this repo to GitHub (already done if you're reading this from the remote).
+1. Push this repo to GitHub.
 2. In the Render dashboard: **New → Blueprint**, point it at this repo. Render reads `render.yaml` and proposes two services: `fin-dash-api` (Docker web service) and `fin-dash-web` (static site).
 3. When prompted, set the two secret env vars on `fin-dash-api` (marked `sync: false` in the blueprint so they aren't stored in git):
    - `SEED_USER_EMAIL`
@@ -100,4 +100,4 @@ Render was chosen over Fly.io/Railway because it deploys both a Docker web servi
    - `VITE_API_BASE_URL` on `fin-dash-web` → the backend's URL
 6. Log in with the seed credentials from step 3.
 
-Free-tier web services spin down after 15 minutes of inactivity; the first request after idling takes ~30-50s to cold-start. Expected, not a bug.
+Free-tier web services spin down after 15 minutes of inactivity; the first request after idling takes ~30-50s to cold-start.
