@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
 
     seed_user_email: str = "demo@example.com"
-    seed_user_password: str = "changeme123"
+    seed_user_password: str = "password"
 
     @property
     def cors_origin_list(self) -> list[str]:
