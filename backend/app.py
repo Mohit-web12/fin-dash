@@ -21,6 +21,8 @@ from config import settings
 from db import Base, engine
 from models import Account, Budget, Transaction, User
 from services.categorize import categorize
+from services.engine import EngineError, place_order as engine_place_order
+from services import engine as engine_client
 
 
 @asynccontextmanager
@@ -491,3 +493,63 @@ def summary(
         "by_category": by_category_out,
         "monthly_totals": monthly_totals_out,
     }
+
+
+# ---------------------------------------------------------------------------
+# Investments — a thin, authenticated proxy to the trade lifecycle engine.
+#
+# fin-dash stores no trades of its own. The engine owns the event log and is the
+# system of record; these endpoints exist so the browser never talks to it directly.
+# The engine has no auth, so keeping it behind these routes means the JWT already
+# protecting the rest of the app protects it too, and the engine can stay private.
+# ---------------------------------------------------------------------------
+
+
+class OrderIn(BaseModel):
+    symbol: str = Field(min_length=1, max_length=16)
+    side: str = Field(pattern="^(BUY|SELL)$")
+    quantity: float = Field(gt=0)
+    limit_price: Optional[float] = Field(default=None, gt=0)
+
+
+def _engine(call, *args, **kwargs):
+    """Run an engine call, turning an unreachable engine into a 503.
+
+    The engine is a separate service that is often simply not running locally. A 503
+    with the reason lets the page say so, instead of a blank panel or a 500.
+    """
+    try:
+        return call(*args, **kwargs)
+    except EngineError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+
+
+@app.get("/investments/positions")
+def investments_positions(user: User = Depends(get_current_user)):
+    return _engine(engine_client.get_positions)
+
+
+@app.get("/investments/breaks")
+def investments_breaks(user: User = Depends(get_current_user)):
+    return _engine(engine_client.get_breaks)
+
+
+@app.get("/investments/trades")
+def investments_trades(user: User = Depends(get_current_user)):
+    return _engine(engine_client.get_trades)
+
+
+@app.post("/investments/orders", status_code=201)
+def investments_place_order(payload: OrderIn, user: User = Depends(get_current_user)):
+    """Log a trade you made at the broker.
+
+    This records intent, not an order sent to a broker. The engine reconciles it against
+    what the broker actually reports — two independent records, and the gap is the break.
+    """
+    return _engine(
+        engine_place_order,
+        payload.symbol.upper(),
+        payload.side,
+        payload.quantity,
+        payload.limit_price,
+    )

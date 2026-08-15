@@ -68,6 +68,13 @@ export const api = {
     return request(`/summary${qs ? `?${qs}` : ""}`);
   },
 
+  // Investments — proxied server-side to the trade engine; the browser never calls it
+  // directly, so the engine needs no auth of its own.
+  investmentPositions: () => request("/investments/positions"),
+  investmentBreaks: () => request("/investments/breaks"),
+  investmentTrades: () => request("/investments/trades"),
+  logTrade: (payload) => request("/investments/orders", { method: "POST", body: payload }),
+
   listBudgets: () => request("/budgets"),
   upsertBudget: (category, monthlyLimit) =>
     request(`/budgets/${encodeURIComponent(category)}`, {

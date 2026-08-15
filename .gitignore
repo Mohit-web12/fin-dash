@@ -24,3 +24,6 @@ frontend/dist/
 frontend/build/
 frontend/.vite/
 npm-debug.log*
+
+# local venv for running the backend tests
+backend/.venv/

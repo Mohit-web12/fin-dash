@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
+import Investments from "./pages/Investments";
 import Transactions from "./pages/Transactions";
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
         >
           <Route index element={<Dashboard />} />
           <Route path="transactions" element={<Transactions />} />
+          <Route path="investments" element={<Investments />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -659,3 +659,10 @@ td {
     scroll-behavior: auto !important;
   }
 }
+
+/* Investments — gains and losses.
+   Uses the *-text tokens, not the fill tokens: the fills are too dark to pass contrast
+   as small text on this background (the note at the top of this file already worked
+   that out). */
+.gain { color: var(--positive-text); }
+.loss { color: var(--negative-text); }

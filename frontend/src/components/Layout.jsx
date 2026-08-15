@@ -17,6 +17,9 @@ export default function Layout() {
           <NavLink to="/transactions" className={({ isActive }) => (isActive ? "active" : "")}>
             Transactions
           </NavLink>
+          <NavLink to="/investments" className={({ isActive }) => (isActive ? "active" : "")}>
+            Investments
+          </NavLink>
         </nav>
         <div className="app-user">
           <span>{user?.email}</span>

@@ -16,6 +16,10 @@ class Settings(BaseSettings):
 
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
 
+    # Trade lifecycle engine. Called server-to-server only — the engine has no auth of
+    # its own, so it stays private and fin-dash's JWT guards access to it.
+    engine_base_url: str = "http://localhost:8000"
+
     seed_user_email: str = "demo@example.com"
     seed_user_password: str = "password"
 
