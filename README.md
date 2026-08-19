@@ -1,4 +1,4 @@
-# Fin Dash
+# SpendGauge
 
 A personal finance tracker with the soul of a vintage dashboard. Track your spending across a cluster of analog gauges, import transactions by CSV, and watch/manage your budget dashboard. Built with FastAPI, and React.
 
@@ -44,4 +44,4 @@ GET    /summary             spend by category, monthly totals, budget vs actual
 
 ## Deployment
 
-Deployed on Render from `render.yaml` — two services: `fin-dash-api` (Docker) and `fin-dash-web` (static site).
+Deployed on Render from `render.yaml` — two services: `fin-dash-api` (Docker) and `fin-dash-web` (static site). The Render service names predate the rename to SpendGauge; they're kept as-is so the existing demo URL stays live.

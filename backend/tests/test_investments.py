@@ -1,6 +1,6 @@
 """The investments proxy to the trade engine.
 
-The engine is a separate service, so these stub it out. What matters here is fin-dash's
+The engine is a separate service, so these stub it out. What matters here is SpendGauge's
 side of the contract: that the routes require a login, that engine responses pass through
 unchanged, and that an engine which is down becomes a 503 the page can explain rather
 than a 500.

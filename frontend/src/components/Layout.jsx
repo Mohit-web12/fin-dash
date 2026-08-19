@@ -8,7 +8,7 @@ export default function Layout() {
     <div className="app-shell">
       <header className="app-header">
         <div className="brand">
-          Fin Dash<span className="brand-dot">.</span>
+          SpendGauge<span className="brand-dot">.</span>
         </div>
         <nav className="app-nav">
           <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>

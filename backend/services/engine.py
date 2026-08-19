@@ -1,8 +1,8 @@
 """Client for the trade lifecycle engine.
 
-fin-dash talks to the engine server-to-server, never from the browser. The engine has no
+SpendGauge talks to the engine server-to-server, never from the browser. The engine has no
 auth of its own, so it must not be publicly reachable — routing calls through here means
-fin-dash's existing JWT is what guards the data, and the engine can stay on a private
+SpendGauge's existing JWT is what guards the data, and the engine can stay on a private
 network.
 
 stdlib urllib rather than httpx: httpx is only a dev dependency here, and this is four

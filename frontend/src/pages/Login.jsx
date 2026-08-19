@@ -30,8 +30,28 @@ export default function Login() {
   return (
     <div className="auth-page">
       <form className="auth-card" onSubmit={handleSubmit}>
-        <h1>Fin Dash</h1>
+        <h1>SpendGauge</h1>
         <p className="muted">Sign in to your finance dashboard</p>
+
+        <div className="demo-hint">
+          <span className="demo-hint-label">Demo account</span>
+          <dl>
+            <dt>Email</dt>
+            <dd><code>demo@example.com</code></dd>
+            <dt>Password</dt>
+            <dd><code>password</code></dd>
+          </dl>
+          <button
+            type="button"
+            className="demo-hint-fill"
+            onClick={() => {
+              setEmail("demo@example.com");
+              setPassword("password");
+            }}
+          >
+            Fill these in
+          </button>
+        </div>
 
         <label>
           Email

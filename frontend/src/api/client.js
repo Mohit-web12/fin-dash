@@ -1,6 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
-const TOKEN_KEY = "fin_dash_token";
+const TOKEN_KEY = "spendgauge_token";
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);

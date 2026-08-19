@@ -666,3 +666,60 @@ td {
    that out). */
 .gain { color: var(--positive-text); }
 .loss { color: var(--negative-text); }
+
+/* ----- demo credentials hint (public demo: these are sample creds, not secrets) ----- */
+.demo-hint {
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.demo-hint-label {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--brass);
+  font-weight: var(--weight-semibold);
+}
+
+.demo-hint dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px var(--space-3);
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.demo-hint dt {
+  color: var(--text-muted);
+}
+
+.demo-hint dd {
+  margin: 0;
+}
+
+.demo-hint code {
+  font-family: var(--font-body);
+  color: var(--text);
+  user-select: all;
+}
+
+.demo-hint-fill {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--brass);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.demo-hint-fill:hover {
+  color: var(--text);
+}
