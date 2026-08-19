@@ -17,11 +17,16 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
 
     # Trade lifecycle engine. Called server-to-server only — the engine has no auth of
-    # its own, so it stays private and fin-dash's JWT guards access to it.
+    # its own, so it stays private and SpendGauge's JWT guards access to it.
     engine_base_url: str = "http://localhost:8000"
 
     seed_user_email: str = "demo@example.com"
     seed_user_password: str = "password"
+
+    # Refill the demo account's history on boot when it's empty. Render's free
+    # plan wipes the SQLite file on deploy, which would otherwise leave the
+    # public demo showing empty gauges. Set false for a real deployment.
+    seed_demo_data: bool = True
 
     @property
     def cors_origin_list(self) -> list[str]:

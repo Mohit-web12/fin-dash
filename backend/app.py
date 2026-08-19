@@ -21,6 +21,7 @@ from config import settings
 from db import Base, engine
 from models import Account, Budget, Transaction, User
 from services.categorize import categorize
+from services.demo_seed import seed_demo_transactions
 from services.engine import EngineError, place_order as engine_place_order
 from services import engine as engine_client
 
@@ -31,6 +32,8 @@ async def lifespan(_app: FastAPI):
     db = SessionLocal()
     try:
         seed_default_user(db)
+        if settings.seed_demo_data:
+            seed_demo_transactions(db)
     finally:
         db.close()
     yield
@@ -498,7 +501,7 @@ def summary(
 # ---------------------------------------------------------------------------
 # Investments — a thin, authenticated proxy to the trade lifecycle engine.
 #
-# fin-dash stores no trades of its own. The engine owns the event log and is the
+# SpendGauge stores no trades of its own. The engine owns the event log and is the
 # system of record; these endpoints exist so the browser never talks to it directly.
 # The engine has no auth, so keeping it behind these routes means the JWT already
 # protecting the rest of the app protects it too, and the engine can stay private.

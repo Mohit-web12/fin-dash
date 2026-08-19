@@ -13,6 +13,9 @@ os.environ["JWT_SECRET"] = "test-secret-at-least-32-bytes-long-for-hs256"
 os.environ["SEED_USER_EMAIL"] = "test@example.com"
 os.environ["SEED_USER_PASSWORD"] = "testpass123"
 os.environ["CORS_ORIGINS"] = "http://localhost:5173"
+# Tests assert against a known-empty database; the demo seeder is exercised by
+# its own tests, which call it directly.
+os.environ["SEED_DEMO_DATA"] = "false"
 
 import pytest
 from fastapi.testclient import TestClient
