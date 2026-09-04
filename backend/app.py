@@ -19,8 +19,9 @@ from auth import (
 )
 from config import settings
 from db import Base, engine
-from models import Account, Budget, Transaction, User
+from models import Account, Budget, InvestmentTrade, Transaction, User
 from services.categorize import categorize
+from services import demo_investments
 from services.demo_seed import seed_demo_transactions
 from services.engine import EngineError, place_order as engine_place_order
 from services import engine as engine_client
@@ -34,6 +35,10 @@ async def lifespan(_app: FastAPI):
         seed_default_user(db)
         if settings.seed_demo_data:
             seed_demo_transactions(db)
+            # Only meaningful without the engine — with it connected, the engine owns
+            # the book and these local rows would be a second, competing record.
+            if not settings.engine_configured:
+                demo_investments.seed_demo_trades(db)
     finally:
         db.close()
     yield
@@ -518,8 +523,8 @@ class OrderIn(BaseModel):
 def _engine(call, *args, **kwargs):
     """Run an engine call, turning an unreachable engine into a 503.
 
-    The engine is a separate service that is often simply not running locally. A 503
-    with the reason lets the page say so, instead of a blank panel or a 500.
+    Only used when an engine is actually configured. When it isn't, the routes below
+    serve local data rather than calling this at all.
     """
     try:
         return call(*args, **kwargs)
@@ -527,32 +532,114 @@ def _engine(call, *args, **kwargs):
         raise HTTPException(status_code=503, detail=str(exc))
 
 
+def _use_engine() -> bool:
+    """Whether to defer to the trade engine for investments data.
+
+    When it is configured it is the system of record and wins. When it is not — the
+    public demo, where the engine isn't reachable — Investments falls back to the user's
+    own InvestmentTrade rows so the page works standalone instead of erroring.
+    """
+    return settings.engine_configured
+
+
 @app.get("/investments/positions")
-def investments_positions(user: User = Depends(get_current_user)):
-    return _engine(engine_client.get_positions)
+def investments_positions(
+    user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    if _use_engine():
+        return _engine(engine_client.get_positions)
+    return {
+        "positions": demo_investments.compute_positions(db, user.id),
+        "prices_live": False,
+        "market_open": None,
+        # The frontend keys off this to label the panel honestly. Prices in this mode are
+        # simulated, not market data.
+        "source": "demo",
+    }
 
 
 @app.get("/investments/breaks")
 def investments_breaks(user: User = Depends(get_current_user)):
-    return _engine(engine_client.get_breaks)
+    if _use_engine():
+        return _engine(engine_client.get_breaks)
+    # Reconciliation is the engine's job and has no local equivalent — there is no second
+    # record to compare against here. An empty list is the truthful answer, not an error.
+    return []
 
 
 @app.get("/investments/trades")
-def investments_trades(user: User = Depends(get_current_user)):
-    return _engine(engine_client.get_trades)
+def investments_trades(
+    user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    if _use_engine():
+        return _engine(engine_client.get_trades)
+    rows = (
+        db.query(InvestmentTrade)
+        .filter(InvestmentTrade.user_id == user.id)
+        .order_by(InvestmentTrade.traded_on.desc(), InvestmentTrade.id.desc())
+        .all()
+    )
+    return [
+        {
+            "symbol": t.symbol,
+            "side": t.side,
+            "quantity": t.quantity,
+            "price": t.price,
+            "traded_on": t.traded_on.isoformat() if t.traded_on else None,
+        }
+        for t in rows
+    ]
 
 
 @app.post("/investments/orders", status_code=201)
-def investments_place_order(payload: OrderIn, user: User = Depends(get_current_user)):
+def investments_place_order(
+    payload: OrderIn,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     """Log a trade you made at the broker.
 
-    This records intent, not an order sent to a broker. The engine reconciles it against
-    what the broker actually reports — two independent records, and the gap is the break.
+    This records intent, not an order sent to a broker. With the engine connected, it
+    reconciles this against what the broker actually reports — two independent records,
+    and the gap between them is the break. Without it, the trade lands in the local book
+    and the positions panel recomputes from it.
     """
-    return _engine(
-        engine_place_order,
-        payload.symbol.upper(),
-        payload.side,
-        payload.quantity,
-        payload.limit_price,
+    if _use_engine():
+        return _engine(
+            engine_place_order,
+            payload.symbol.upper(),
+            payload.side,
+            payload.quantity,
+            payload.limit_price,
+        )
+    trade = demo_investments.record_trade(
+        db, user.id, payload.symbol, payload.side, payload.quantity, payload.limit_price
     )
+    return {
+        "symbol": trade.symbol,
+        "side": trade.side,
+        "quantity": trade.quantity,
+        "price": trade.price,
+        "traded_on": trade.traded_on.isoformat(),
+        "source": "demo",
+    }
+
+
+@app.post("/investments/demo/reset", status_code=200)
+def investments_reset_demo(
+    user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    """Restore the sample book.
+
+    The demo is public and shared, so anyone can log trades into it. This puts it back to
+    a known state without needing a redeploy.
+    """
+    if _use_engine():
+        raise HTTPException(
+            status_code=400,
+            detail="Demo reset only applies when the trade engine is not connected",
+        )
+    db.query(InvestmentTrade).filter(InvestmentTrade.user_id == user.id).delete()
+    db.commit()
+    inserted = demo_investments.seed_demo_trades(db)
+    return {"reset": True, "trades_seeded": inserted}

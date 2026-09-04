@@ -17,6 +17,10 @@ services:
         sync: false
       - key: SEED_USER_PASSWORD
         sync: false
+      # ENGINE_BASE_URL is deliberately unset here. The trade lifecycle engine runs
+      # locally and isn't reachable from Render, so Investments serves its own sample
+      # book instead. Setting this to a localhost URL is what previously made the API
+      # call itself and return 404 on that page.
     # Render's free plan has an ephemeral filesystem: the SQLite file at
     # /app/data/finance.db is wiped on every deploy and on periodic restarts.
     # Fine for a demo; uncomment this (and upgrade off the free plan) for

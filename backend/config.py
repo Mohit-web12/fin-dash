@@ -18,7 +18,16 @@ class Settings(BaseSettings):
 
     # Trade lifecycle engine. Called server-to-server only — the engine has no auth of
     # its own, so it stays private and SpendGauge's JWT guards access to it.
-    engine_base_url: str = "http://localhost:8000"
+    #
+    # Empty by default, meaning "no engine connected". The engine runs locally and is not
+    # reachable from the public deploy, and defaulting to localhost:8000 made the deployed
+    # API call ITSELF (it binds 8000 too), returning 404 for a route it doesn't have.
+    # Unset means Investments serves its own data instead of surfacing an error.
+    engine_base_url: str = ""
+
+    @property
+    def engine_configured(self) -> bool:
+        return bool(self.engine_base_url.strip())
 
     seed_user_email: str = "demo@example.com"
     seed_user_password: str = "password"

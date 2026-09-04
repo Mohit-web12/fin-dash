@@ -74,6 +74,7 @@ export const api = {
   investmentBreaks: () => request("/investments/breaks"),
   investmentTrades: () => request("/investments/trades"),
   logTrade: (payload) => request("/investments/orders", { method: "POST", body: payload }),
+  resetInvestmentsDemo: () => request("/investments/demo/reset", { method: "POST" }),
 
   listBudgets: () => request("/budgets"),
   upsertBudget: (category, monthlyLimit) =>

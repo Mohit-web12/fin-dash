@@ -118,6 +118,7 @@ export default function Investments() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -143,6 +144,21 @@ export default function Investments() {
   }, [refresh]);
 
   const positions = data?.positions ?? [];
+  // The API says which source it answered from; the page reads differently for each.
+  const isDemo = data?.source === "demo";
+
+  async function resetDemo() {
+    setResetting(true);
+    try {
+      await api.resetInvestmentsDemo();
+      await refresh();
+    } catch (err) {
+      setError(err.detail || "Could not reset the sample data");
+    } finally {
+      setResetting(false);
+    }
+  }
+
   const totalPL = positions.reduce(
     (acc, p) => (p.unrealized_pl == null ? acc : acc + Number(p.unrealized_pl)),
     0
@@ -152,22 +168,43 @@ export default function Investments() {
     <>
       <div className="page-header">
         <h1>Investments</h1>
-        <button className="btn" onClick={() => setShowForm(true)}>
-          Log a trade
-        </button>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          {isDemo ? (
+            <button className="btn btn-ghost" onClick={resetDemo} disabled={resetting}>
+              {resetting ? "Resetting…" : "Reset sample data"}
+            </button>
+          ) : null}
+          <button className="btn" onClick={() => setShowForm(true)}>
+            Log a trade
+          </button>
+        </div>
       </div>
 
       {error ? <div className="error-banner">{error}</div> : null}
+
+      {/* Say plainly where the numbers come from. The engine is the real source and runs
+          locally; on the public demo there is no engine, so this book is the app's own
+          and the prices are simulated. Better to state that than to imply a market feed. */}
+      {isDemo ? (
+        <div className="banner banner-info">
+          <strong>Sample portfolio.</strong> Positions are computed from trades recorded
+          here, and prices are simulated — this deployment isn't connected to a market
+          feed. Log a trade and the table recalculates live. Reconciliation against a
+          broker runs in the trade lifecycle engine, which runs locally.
+        </div>
+      ) : null}
 
       <div className="panel-head">
         <h2>Positions</h2>
         {data ? (
           <span className="muted">
-            {!data.prices_live
-              ? "prices unavailable"
-              : data.market_open
-                ? "market open — live"
-                : "market closed — last close"}
+            {isDemo
+              ? "simulated prices"
+              : !data.prices_live
+                ? "prices unavailable"
+                : data.market_open
+                  ? "market open — live"
+                  : "market closed — last close"}
           </span>
         ) : null}
       </div>
@@ -175,7 +212,7 @@ export default function Investments() {
       {loading ? (
         <div className="skeleton" />
       ) : positions.length === 0 ? (
-        <p className="muted">No open positions yet. Log a trade once it has settled.</p>
+        <p className="muted">No open positions yet — log a trade to get started.</p>
       ) : (
         <div className="table-wrap">
           <table>

@@ -27,3 +27,6 @@ npm-debug.log*
 
 # local venv for running the backend tests
 backend/.venv/
+
+# pytest-cov artifact
+backend/.coverage
