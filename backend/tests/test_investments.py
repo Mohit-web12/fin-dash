@@ -10,6 +10,7 @@ import pytest
 
 from auth import SessionLocal
 from config import settings
+from models import InvestmentTrade, User
 from services import demo_investments, engine as engine_client
 from services.engine import EngineError
 
@@ -228,3 +229,28 @@ def test_reset_is_rejected_when_an_engine_owns_the_book(client, auth_headers, en
     """With the engine connected it is the system of record — wiping local rows would be
     meaningless at best and misleading at worst."""
     assert client.post("/investments/demo/reset", headers=auth_headers).status_code == 400
+
+
+def test_reset_restores_the_callers_own_book(demo_book):
+    """Reset must re-seed the caller, not whichever account happens to be first.
+
+    Regression: the delete was scoped to the signed-in user while the re-seed always took
+    the lowest User.id, so a second account's reset wiped its book and restored nothing.
+    """
+    db = SessionLocal()
+    try:
+        second = User(email="other@example.com", hashed_password="x")
+        db.add(second)
+        db.commit()
+
+        seeded = demo_investments.seed_demo_trades(db, user_id=second.id)
+        assert seeded > 0, "a fresh account should get the full sample book"
+
+        held = (
+            db.query(InvestmentTrade)
+            .filter(InvestmentTrade.user_id == second.id)
+            .count()
+        )
+        assert held == seeded
+    finally:
+        db.close()

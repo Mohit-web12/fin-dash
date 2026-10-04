@@ -641,5 +641,5 @@ def investments_reset_demo(
         )
     db.query(InvestmentTrade).filter(InvestmentTrade.user_id == user.id).delete()
     db.commit()
-    inserted = demo_investments.seed_demo_trades(db)
+    inserted = demo_investments.seed_demo_trades(db, user_id=user.id)
     return {"reset": True, "trades_seeded": inserted}

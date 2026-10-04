@@ -66,18 +66,27 @@ def simulated_price(symbol: str, now: float | None = None) -> float:
     return round(base * (1 + DRIFT_PCT * wave), 2)
 
 
-def seed_demo_trades(db: Session, today: date | None = None) -> int:
-    """Give the demo account an opening book. No-op if it already has trades."""
-    user = db.query(User).order_by(User.id).first()
-    if user is None:
-        return 0
-    if db.query(InvestmentTrade).filter(InvestmentTrade.user_id == user.id).count() > 0:
+def seed_demo_trades(
+    db: Session, today: date | None = None, user_id: int | None = None
+) -> int:
+    """Give an account an opening book. No-op if it already has trades.
+
+    user_id defaults to the first account, which is who boot-time seeding is for. Callers
+    acting on behalf of a signed-in user must pass it, or the no-op check below looks at
+    the wrong book.
+    """
+    if user_id is None:
+        user = db.query(User).order_by(User.id).first()
+        if user is None:
+            return 0
+        user_id = user.id
+    if db.query(InvestmentTrade).filter(InvestmentTrade.user_id == user_id).count() > 0:
         return 0
 
     today = today or date.today()
     rows = [
         InvestmentTrade(
-            user_id=user.id,
+            user_id=user_id,
             symbol=symbol,
             side=side,
             quantity=float(qty),
