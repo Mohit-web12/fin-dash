@@ -38,11 +38,12 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
-      # Update this to the backend's actual onrender.com URL after first deploy,
-      # then trigger a manual redeploy so the build picks it up (Vite bakes
-      # this in at build time, not read at runtime).
+      # The -s3o9 suffix is not a typo. The plain fin-dash-api.onrender.com
+      # subdomain belongs to an unrelated account, so Render gave this service a
+      # suffixed host; pointing here at the bare name reaches a stranger's API.
+      # Vite bakes this in at build time, so changing it needs a rebuild, not a restart.
       - key: VITE_API_BASE_URL
-        value: https://fin-dash-api.onrender.com
+        value: https://fin-dash-api-s3o9.onrender.com
     routes:
       - type: rewrite
         source: /*
